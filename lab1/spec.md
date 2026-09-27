@@ -38,6 +38,7 @@
 - Category -> Product (1:N)
 - Order -> OrderItem (1:N)
 - Product -> OrderItem (1:N)
+- Товар належить рівно одній категорії (1:N, не M:N) — свідоме спрощення моделі, а не замовчування.
 
 OrderItem — асоціативна сутність між Order і Product, бо зв'язок несе власні
 атрибути (quantity, unit_price), а не просто M:N без даних.
