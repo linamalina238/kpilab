@@ -49,5 +49,7 @@ OrderItem — асоціативна сутність між Order і Product, �
 - Назви полів у spec.md і в ER-діаграмі збігаються дослівно.
 - Зв'язок Order–Product реалізовано через асоціативну сутність OrderItem
   (бо є власні атрибути quantity, unit_price), а не як прямий M:N.
+  - Прямий M:N Order–Product відхилено свідомо: він не може зберігати
+  quantity і unit_price на момент замовлення — саме тому OrderItem.
 - ER-рендер (Mermaid erDiagram) відповідає цьому опису без розбіжностей.
 - Order.status приймає лише значення з фіксованого переліку: pending / paid / shipped / cancelled.
