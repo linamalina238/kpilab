@@ -22,3 +22,11 @@
 - id: UUID
 - created_at: datetime
 - status: string
+
+# Зв'язки
+
+User -> Order (1:N)
+
+Category -> Product (1:N)
+
+Order -> Product (M:N)
