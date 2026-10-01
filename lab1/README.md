@@ -14,3 +14,4 @@
 - Product
 - Category
 - Order
+- OrderItem
