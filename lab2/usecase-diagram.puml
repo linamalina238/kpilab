@@ -1,3 +1,4 @@
+@startuml
 left to right direction
 
 actor "Користувач" as User
@@ -15,6 +16,7 @@ rectangle "Інтернет-магазин" {
   usecase "Скасувати замовлення" as UC04
   usecase "Позначити замовлення відправленим" as UC05
   usecase "Додати товар" as UC06
+  usecase "Відхилити пізню відповідь" as UC07
 }
 
 Buyer --> UC01
@@ -23,6 +25,8 @@ Buyer --> UC04
 Admin --> UC05
 Admin --> UC06
 Pay --> UC03
+Pay --> UC07
 
 UC02 .> UC03 : <<include>>
-UC04 .> UC03 : <<extend>>\n(Order.status = pending)
+UC07 .> UC03 : <<extend>>\n(відповідь пізніше 30 с після запиту)
+@enduml
