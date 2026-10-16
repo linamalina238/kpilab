@@ -1,0 +1,28 @@
+left to right direction
+
+actor "Користувач" as User
+actor "Покупець" as Buyer
+actor "Адміністратор" as Admin
+actor "Платіжний сервіс\n<<зовнішня система>>" as Pay
+
+Buyer --|> User
+Admin --|> User
+
+rectangle "Інтернет-магазин" {
+  usecase "Переглянути товари категорії" as UC01
+  usecase "Оформити замовлення" as UC02
+  usecase "Оплатити замовлення" as UC03
+  usecase "Скасувати замовлення" as UC04
+  usecase "Позначити замовлення відправленим" as UC05
+  usecase "Додати товар" as UC06
+}
+
+Buyer --> UC01
+Buyer --> UC02
+Buyer --> UC04
+Admin --> UC05
+Admin --> UC06
+Pay --> UC03
+
+UC02 .> UC03 : <<include>>
+UC04 .> UC03 : <<extend>>\n(Order.status = pending)
