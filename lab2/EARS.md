@@ -14,13 +14,14 @@
 | REQ-10 | IF відповідь Платіжного сервісу на запит оплати Order надходить пізніше ніж через 30 с після запиту, THEN система SHALL повернути Платіжному сервісу відхилення цієї відповіді. | IF-THEN | Order |
 | REQ-11 | WHEN Покупець скасовує Order зі статусом pending, система SHALL змінити його статус на cancelled. | WHEN | Order.status: pending → cancelled |
 | REQ-12 | IF Покупець скасовує Order зі статусом shipped, THEN система SHALL відхилити скасування. | IF-THEN | Order, status = shipped |
-| REQ-13 | WHEN Адміністратор позначає Order зі статусом paid як відправлений, система SHALL змінити його статус на shipped. | WHEN | Order.status: paid → shipped |
-| REQ-14 | IF Адміністратор додає Product з category_id неіснуючої Category, THEN система SHALL відхилити додавання. | IF-THEN | Product.category_id, Category |
+| REQ-13 | WHEN Адміністратор позначає Order зі статусом paid як відправлений, система SHALL змінити його статус на shipped. | WHEN | Order.status: paid → shipped; ПРОПОЗИЦІЯ: User.role |
+| REQ-14 | IF Адміністратор додає Product з category_id неіснуючої Category, THEN система SHALL відхилити додавання. | IF-THEN | Product.category_id, Category; ПРОПОЗИЦІЯ: User.role |
 | REQ-15 | WHEN Покупець обирає Category, система SHALL показати перелік Product з category_id цієї Category. | WHEN | Category, Product.category_id |
+| REQ-16 | IF User з role buyer намагається виконати дію Адміністратора, THEN система SHALL відхилити цю дію. | IF-THEN | ПРОПОЗИЦІЯ: User.role |
 
 
 ## 2. Пропозиції та припущення
 
-- **ПРОПОЗИЦІЯ: User.role.** У моделі User немає ролі, тому я не писав вимог на кшталт «лише Адміністратор може позначати Order як shipped». Роль потрібна, щоб відрізнити Покупця від Адміністратора; без неї такі вимоги не можна перевірити.
+- **ПРОПОЗИЦІЯ: User.role.** Нове поле в User зі значеннями `buyer` / `admin`. Модель Завдання 1 не відрізняє Покупця від Адміністратора, а REQ-13, REQ-14 і REQ-16 без цього не перевірити.
 - **Скасування Order зі статусом paid.** Правила для нього немає: це потребувало б повернення коштів, а відповідної сутності в моделі немає. Нічого не вигадував.
 - **Припущення в REQ-08.** Відмову Платіжного сервісу я прив'язав до статусу cancelled, бо інших статусів для невдалої оплати в моделі немає (тільки pending / paid / shipped / cancelled).
