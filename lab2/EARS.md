@@ -11,7 +11,7 @@
 | REQ-07 | WHEN Платіжний сервіс підтверджує оплату протягом 30 с після запиту, система SHALL змінити статус Order з pending на paid. | WHEN | Order.status: pending → paid |
 | REQ-08 | WHEN Платіжний сервіс відхиляє оплату протягом 30 с після запиту, система SHALL змінити статус Order з pending на cancelled. | WHEN | Order.status: pending → cancelled |
 | REQ-09 | IF Платіжний сервіс не відповідає протягом 30 с після запиту, THEN система SHALL змінити статус Order з pending на cancelled. | IF-THEN | Order.status: pending → cancelled |
-| REQ-10 | IF відповідь Платіжного сервісу надходить пізніше ніж через 30 с після запиту, THEN система SHALL залишити статус Order cancelled. | IF-THEN | Order, status = cancelled |
+| REQ-10 | IF відповідь Платіжного сервісу на запит оплати Order надходить пізніше ніж через 30 с після запиту, THEN система SHALL повернути Платіжному сервісу відхилення цієї відповіді. | IF-THEN | Order |
 | REQ-11 | WHEN Покупець скасовує Order зі статусом pending, система SHALL змінити його статус на cancelled. | WHEN | Order.status: pending → cancelled |
 | REQ-12 | IF Покупець скасовує Order зі статусом shipped, THEN система SHALL відхилити скасування. | IF-THEN | Order, status = shipped |
 | REQ-13 | WHEN Адміністратор позначає Order зі статусом paid як відправлений, система SHALL змінити його статус на shipped. | WHEN | Order.status: paid → shipped |
