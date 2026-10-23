@@ -3,30 +3,19 @@ left to right direction
 
 actor "Користувач" as User
 actor "Покупець" as Buyer
-actor "Адміністратор" as Admin
-actor "Платіжний сервіс\n<<зовнішня система>>" as Pay
 
 Buyer --|> User
-Admin --|> User
 
 rectangle "Інтернет-магазин" {
-  usecase "Переглянути товари категорії" as UC01
-  usecase "Оформити замовлення" as UC02
-  usecase "Оплатити замовлення" as UC03
-  usecase "Скасувати замовлення" as UC04
-  usecase "Позначити замовлення відправленим" as UC05
-  usecase "Додати товар" as UC06
-  usecase "Відхилити пізню відповідь" as UC07
+  usecase "UC-01 Переглянути товари категорії" as UC01
+  usecase "UC-02 Оформити й оплатити замовлення" as UC02 #LightBlue
+  usecase "UC-03 Переглянути статус замовлення" as UC03
 }
 
-Buyer --> UC01
+User --> UC01
 Buyer --> UC02
-Buyer --> UC04
-Admin --> UC05
-Admin --> UC06
-Pay --> UC03
-Pay --> UC07
+Buyer --> UC03
 
-UC02 .> UC03 : <<include>>
-UC07 .> UC03 : <<extend>>\n(відповідь пізніше 30 с після запиту)
+UC02 .> UC01 : <<include>>
+UC03 .> UC02 : <<extend>>\n(оплату завершено:\nOrder.status = paid або cancelled)
 @enduml
