@@ -1,27 +1,20 @@
-## 1. Вимоги EARS
+# Вимоги EARS — UC-02 «Оформити й оплатити замовлення»
 
-| id | текст | шаблон | сутність або статус з моделі |
+| id | текст | шаблон | сутність |
 |---|---|---|---|
-| REQ-01 | WHEN Покупець надсилає замовлення з ≥1 позицією, система SHALL створити Order зі статусом pending. | WHEN | Order, status = pending |
-| REQ-02 | WHEN система створює Order, система SHALL створити один OrderItem на кожен обраний Product. | WHEN | Order, OrderItem, Product |
-| REQ-03 | WHEN система створює OrderItem, система SHALL записати в unit_price значення Product.price на цей момент. | WHEN | OrderItem.unit_price, Product.price |
-| REQ-04 | IF Покупець вказує quantity менше 1 шт., THEN система SHALL відхилити створення Order. | IF-THEN | OrderItem.quantity, Order |
-| REQ-05 | IF Покупець надсилає замовлення без жодної позиції, THEN система SHALL відхилити створення Order. | IF-THEN | Order, OrderItem |
-| REQ-06 | WHEN Order створено зі статусом pending, система SHALL надіслати Платіжному сервісу запит на оплату суми добутків quantity × unit_price усіх OrderItem цього Order. | WHEN | Order, status = pending, OrderItem |
-| REQ-07 | WHEN Платіжний сервіс підтверджує оплату протягом 30 с після запиту, система SHALL змінити статус Order з pending на paid. | WHEN | Order.status: pending → paid |
-| REQ-08 | WHEN Платіжний сервіс відхиляє оплату протягом 30 с після запиту, система SHALL змінити статус Order з pending на cancelled. | WHEN | Order.status: pending → cancelled |
-| REQ-09 | IF Платіжний сервіс не відповідає протягом 30 с після запиту, THEN система SHALL змінити статус Order з pending на cancelled. | IF-THEN | Order.status: pending → cancelled |
-| REQ-10 | IF відповідь Платіжного сервісу на запит оплати Order надходить пізніше ніж через 30 с після запиту, THEN система SHALL повернути Платіжному сервісу відхилення цієї відповіді. | IF-THEN | Order |
-| REQ-11 | WHEN Покупець скасовує Order зі статусом pending, система SHALL змінити його статус на cancelled. | WHEN | Order.status: pending → cancelled |
-| REQ-12 | IF Покупець скасовує Order зі статусом shipped, THEN система SHALL відхилити скасування. | IF-THEN | Order, status = shipped |
-| REQ-13 | WHEN Адміністратор позначає Order зі статусом paid як відправлений, система SHALL змінити його статус на shipped. | WHEN | Order.status: paid → shipped; ПРОПОЗИЦІЯ: User.role |
-| REQ-14 | IF Адміністратор додає Product з category_id неіснуючої Category, THEN система SHALL відхилити додавання. | IF-THEN | Product.category_id, Category; ПРОПОЗИЦІЯ: User.role |
-| REQ-15 | WHEN Покупець обирає Category, система SHALL показати перелік Product з category_id цієї Category. | WHEN | Category, Product.category_id |
-| REQ-16 | IF User з role buyer намагається виконати дію Адміністратора, THEN система SHALL відхилити цю дію. | IF-THEN | ПРОПОЗИЦІЯ: User.role |
+| REQ-01 | WHEN Покупець оформлює замовлення з ≥1 позицією, система SHALL створити Order зі статусом pending і user_id цього Покупця. | WHEN | Order (user_id, status = pending), User |
+| REQ-02 | WHEN система створює Order, система SHALL записати в created_at поточні дату й час. | WHEN | Order.created_at |
+| REQ-03 | WHEN система створює Order, система SHALL створити один OrderItem з quantity ≥ 1 шт. на кожен обраний Product. | WHEN | Order, OrderItem.quantity, Product |
+| REQ-04 | WHEN система створює OrderItem, система SHALL записати в unit_price значення Product.price на цей момент. | WHEN | OrderItem.unit_price, Product.price |
+| REQ-05 | WHEN Order створено зі статусом pending, система SHALL надіслати Платіжному сервісу запит на оплату суми добутків quantity × unit_price усіх OrderItem цього Order. | WHEN | Order (status = pending), OrderItem |
+| REQ-06 | WHEN Платіжний сервіс підтверджує оплату не пізніше ніж через 30 с після запиту, система SHALL змінити статус Order з pending на paid. | WHEN | Order.status: pending → paid |
+| REQ-07 | WHEN Платіжний сервіс відхиляє оплату не пізніше ніж через 30 с після запиту, система SHALL змінити статус Order з pending на cancelled. | WHEN | Order.status: pending → cancelled |
+| REQ-08 | IF Платіжний сервіс не відповідає понад 30 с після запиту, THEN система SHALL змінити статус Order з pending на cancelled. | IF-THEN | Order.status: pending → cancelled |
 
+Межа таймауту: відповідь через 30 с і менше це успіх або відмова (REQ-06, REQ-07), відповідь пізніше за 30 с це таймаут (REQ-08).
 
-## 2. Пропозиції та припущення
+ПРОПОЗИЦІЙ немає: усі сутності, атрибути й статуси взято з моделі Лаби 1.
 
-- **ПРОПОЗИЦІЯ: User.role.** Нове поле в User зі значеннями `buyer` / `admin`. Модель Завдання 1 не відрізняє Покупця від Адміністратора, а REQ-13, REQ-14 і REQ-16 без цього не перевірити.
-- **Скасування Order зі статусом paid.** Правила для нього немає: це потребувало б повернення коштів, а відповідної сутності в моделі немає. Нічого не вигадував.
-- **Припущення в REQ-08.** Відмову Платіжного сервісу я прив'язав до статусу cancelled, бо інших статусів для невдалої оплати в моделі немає (тільки pending / paid / shipped / cancelled).
+## Вимога без сценарію
+
+**REQ-02.** Значення `created_at` задає годинник сервера в момент створення Order, тому сценарій Gherkin не може вказати точне очікуване значення, не фіксуючи час у тесті. Жоден із трьох сценаріїв це поле не перевіряє. Вимога лишається для модульного тесту: поле не порожнє й відрізняється від поточного часу не більше ніж на 5 с.
