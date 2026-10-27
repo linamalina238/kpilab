@@ -21,23 +21,21 @@ sequenceDiagram
     loop для кожного обраного Product
         O->>+PR: getPrice(product_id)
         PR-->>-O: price
-        O->>O: createOrderItem(quantity, unit_price = price)
+        O->>O: createOrderItem(product_id, quantity, unit_price = price)
     end
     O->>+OR: saveOrder(Order, OrderItem)
     OR-->>-O: order_id
-    O-->>-B: order_id
+    O-->>B: order_id
 
-    activate O
     par запит на оплату
-        O-)PS: requestPayment(order_id, quantity × unit_price)
+        O-)PS: requestPayment(order_id, amount = сума quantity × unit_price)
     and відлік 30 с
-        O->>O: startCountdown(30 с)
+        O->>O: startCountdown(order_id, 30 с)
     end
-    deactivate O
 
     Note over O,PS: підтвердження приходить рівно на 30-й секунді. Відлік спрацьовує лише після 30 с
-    PS-)+O: paymentConfirmed(order_id)
-    O->>O: stopCountdown()
+    PS-)O: paymentConfirmed(order_id)
+    O->>O: stopCountdown(order_id)
     O->>+OR: getOrderStatus(order_id)
     OR-->>-O: status
     opt Order ще pending
@@ -64,7 +62,7 @@ sequenceDiagram
     Note over B,PS: Given: Order pending (quantity 2, unit_price 1200.00), запит на оплату 2400.00 надіслано, відлік 30 с іде
     Note over O,PS: відхилення приходить через 10 с
     PS-)+O: paymentRejected(order_id)
-    O->>O: stopCountdown()
+    O->>O: stopCountdown(order_id)
     O->>+OR: getOrderStatus(order_id)
     OR-->>-O: status
     opt Order ще pending
@@ -90,7 +88,7 @@ sequenceDiagram
 
     Note over B,PS: Given: Order pending (quantity 2, unit_price 1200.00), запит на оплату 2400.00 надіслано, відлік 30 с іде
     Note over O,PS: від PaymentService немає відповіді понад 30 с (у Gherkin 31 с)
-    O-)+O: onPaymentTimeout()
+    O-)+O: onPaymentTimeout(order_id)
     O->>+OR: getOrderStatus(order_id)
     OR-->>-O: status
     opt Order ще pending
