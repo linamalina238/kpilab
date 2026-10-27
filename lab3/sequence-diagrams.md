@@ -11,6 +11,7 @@ sequenceDiagram
     participant OR as OrderRepository
     participant PS as PaymentService
 
+    Note over B,PS: Given: User Олена, Category Електроніка з Product Навушники (price 1200.00),<br/>Category Одяг з Product Футболка (price 500.00)
     B->>+C: getProducts(category_id)
     C->>+PR: findProducts(category_id)
     PR-->>-C: список Product
@@ -32,9 +33,10 @@ sequenceDiagram
     and відлік 30 с
         O->>O: startCountdown(order_id, 30 с)
     end
+    deactivate O
 
     Note over O,PS: підтвердження приходить рівно на 30-й секунді. Відлік спрацьовує лише після 30 с
-    PS-)O: paymentConfirmed(order_id)
+    PS-)+O: paymentConfirmed(order_id)
     O->>O: stopCountdown(order_id)
     O->>+OR: getOrderStatus(order_id)
     OR-->>-O: status
