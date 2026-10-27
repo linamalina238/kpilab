@@ -19,19 +19,21 @@ S1 включає кроки UC-01 (перегляд категорії) і UC-0
 | Учасник | Тип | Звідки в моделі (ER Лаби 1) |
 |---|---|---|
 | Покупець | actor | User (user_id) |
-| CatalogService | сервіс | читає Category, Product |
+| CatalogService | сервіс | читає Product за category_id |
 | OrderService | сервіс | створює Order і OrderItem, змінює Order.status |
-| ProductRepository | дані | Category, Product |
+| ProductRepository | дані | Product (category_id, price) |
 | OrderRepository | дані | Order, OrderItem |
 | PaymentService | зовнішня система | в ER немає (ADR 0003 Лаби 2) |
 
 ## Кроки сценаріїв
 - **S1:** Покупець відкриває категорію → CatalogService бере з ProductRepository 
-товари цієї категорії → Покупець обирає товар і оформлює замовлення → OrderService 
-бере ціну товару з ProductRepository, створює Order зі статусом `pending` і 
-OrderItem → зберігає їх через OrderRepository → надсилає запит на оплату і 
-одночасно починає рахувати 30 с → PaymentService підтверджує не пізніше ніж за 30 
-с → статус `paid` → Покупець відкриває замовлення → бачить статус `paid`.
+товари з `category_id` цієї категорії → Покупець обирає товар і кількість і 
+оформлює замовлення → OrderService бере ціну товару з ProductRepository, створює 
+Order зі статусом `pending`, `user_id` Покупця і `created_at`, і OrderItem з 
+`quantity` і `unit_price` → зберігає їх через OrderRepository → надсилає запит на 
+оплату суми добутків `quantity × unit_price` усіх OrderItem і одночасно починає 
+рахувати 30 с → PaymentService підтверджує не пізніше ніж за 30 с → статус `paid` 
+→ Покупець відкриває замовлення → бачить статус `paid`.
 - **S2:** На початку (Given) Order уже створено зі статусом `pending` і запит на 
 оплату вже надіслано → PaymentService відхиляє → статус `cancelled` → Покупець 
 відкриває замовлення → бачить статус `cancelled`.
@@ -49,8 +51,11 @@ OrderItem → зберігає їх через OrderRepository → надсил�
 окремого учасника User немає. PaymentService у моделі немає, бо це зовнішня 
 система, на діаграмі він participant, а не actor. Статуси Order беру лише з Лаби
 1: pending, paid, shipped, cancelled.
-4. Кожен крок When/Then з Gherkin має своє повідомлення на діаграмі в тому ж 
-порядку, а Given показую приміткою (Note).
+4. Кроки діаграм ідуть у тому ж порядку, що й у Gherkin. Кожен When — це 
+повідомлення, кожен Then — повідомлення або return. Given і те, чого не 
+відбувається (у S3 відповіді немає), показую приміткою (Note). Кроки, яких немає в 
+Gherkin, але які потрібні за EARS (наприклад, відлік 30 с), допускаються, якщо в 
+AUDIT вказано, з якої вимоги вони взялися.
 5. Кожен виклик має return-повідомлення, крім запиту на оплату: OrderService 
 надсилає його і не чекає, бо в S3 відповіді немає. Відповідь PaymentService 
 приходить окремим повідомленням, а 30 с рахує сам OrderService.
