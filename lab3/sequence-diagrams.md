@@ -43,6 +43,7 @@ sequenceDiagram
     opt Order ще pending
         O->>+OR: updateStatus(order_id, status = paid)
         OR-->>-O: ok
+        O-)B: orderStatusChanged(order_id, status = paid)
     end
     deactivate O
 
@@ -70,6 +71,7 @@ sequenceDiagram
     opt Order ще pending
         O->>+OR: updateStatus(order_id, status = cancelled)
         OR-->>-O: ok
+        O-)B: orderStatusChanged(order_id, status = cancelled)
     end
     deactivate O
 
@@ -96,6 +98,7 @@ sequenceDiagram
     opt Order ще pending
         O->>+OR: updateStatus(order_id, status = cancelled)
         OR-->>-O: ok
+        O-)B: orderStatusChanged(order_id, status = cancelled)
     end
     deactivate O
 
