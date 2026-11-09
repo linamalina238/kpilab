@@ -22,18 +22,19 @@ flowchart TB
 
     subgraph CAT["CatalogService"]
         c1>accept getProducts]:::accept
+        c4["знайти товари з category_id"]
         c2(["send список товарів"]):::send
         c3(("✕"))
 
-        c1 --> c2 --> c3
+        c1 --> c4 --> c2 --> c3
     end
 
     subgraph ORD["OrderService"]
         o1>accept submitOrder]:::accept
-        o2["створити Order зі статусом pending"]
+        o2["створити Order: pending, user_id, created_at"]
         o3{"є ще товари?"}
-        o4["взяти ціну товару"]
-        o5["створити OrderItem"]
+        o4["взяти Product.price"]
+        o5["створити OrderItem: quantity, unit_price"]
         o6["зберегти замовлення"]
         o7(["send order_id"]):::send
         F["fork"]:::bar
@@ -93,6 +94,7 @@ flowchart TB
     o19 -.-> b7
     b8 -.-> o20
     o21 -.-> b9
+    o9 -.->|понад 30 с| o13
 
     classDef send fill:#e8f0fe,stroke:#4a6fa5,color:#000
     classDef accept fill:#fff4e0,stroke:#b07d2b,color:#000
