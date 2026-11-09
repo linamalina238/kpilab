@@ -7,13 +7,13 @@ flowchart TB
         b0(("Початок"))
         b1["відкрити категорію"]
         b2(["send getProducts"]):::send
-        b3>accept список товарів]:::accept
+        b3>accept список Product]:::accept
         b4["обрати товари і кількість"]
         b5(["send submitOrder"]):::send
         b6>accept order_id]:::accept
         b7>accept orderStatusChanged]:::accept
         b8(["send getOrder"]):::send
-        b9>accept статус замовлення]:::accept
+        b9>accept status]:::accept
         b10["побачити статус замовлення"]
         b11((("Кінець")))
 
@@ -23,7 +23,7 @@ flowchart TB
     subgraph CAT["CatalogService"]
         c1>accept getProducts]:::accept
         c4["знайти товари з category_id"]
-        c2(["send список товарів"]):::send
+        c2(["send список Product"]):::send
         c3(("✕"))
 
         c1 --> c4 --> c2 --> c3
@@ -41,7 +41,7 @@ flowchart TB
         o8(["send requestPayment"]):::send
         o9["запустити відлік 30 с"]
         J["join"]:::bar
-        o10["очікування"]
+        o10{{"очікування: перша подія виграє"}}
         o11>accept paymentConfirmed]:::accept
         o12>accept paymentRejected]:::accept
         o13>accept таймаут 30 с]:::accept
@@ -53,7 +53,8 @@ flowchart TB
         M{" "}
         o19(["send orderStatusChanged"]):::send
         o20>accept getOrder]:::accept
-        o21(["send статус замовлення"]):::send
+        o23["прочитати Order.status"]
+        o21(["send status"]):::send
         o22(("✕"))
 
         o1 --> o2 --> o3
@@ -62,10 +63,10 @@ flowchart TB
         F --> o8 --> J
         F --> o9 --> J
         J --> o10
-        o10 --> o11 --> o14 --> o16 --> M
-        o10 --> o12 --> o15 --> o17 --> M
-        o10 --> o13 --> o18 --> M
-        M --> o19 --> o20 --> o21 --> o22
+        o10 -->|не пізніше 30 с| o11 --> o14 --> o16 --> M
+        o10 -->|не пізніше 30 с| o12 --> o15 --> o17 --> M
+        o10 -->|понад 30 с| o13 --> o18 --> M
+        M --> o19 --> o20 --> o23 --> o21 --> o22
     end
 
     subgraph PAY["PaymentService"]
