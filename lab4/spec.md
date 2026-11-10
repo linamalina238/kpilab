@@ -18,7 +18,7 @@ ProductRepository і OrderRepository доріжок не мають: це схо
 
 ## Кроки процесу
 1. Початок: Покупець відкриває категорію → CatalogService повертає товари з її `category_id`.
-2. Покупець обирає товари й кількість, надсилає `submitOrder`.
+2. Покупець обирає щонайменше один товар і кількість (REQ-01), надсилає `submitOrder`; тому цикл у кроці 3 виконується щонайменше раз.
 3. OrderService створює Order (`pending`, `user_id`, `created_at`), потім цикл: поки є товари, бере `Product.price` і створює OrderItem (`quantity`, `unit_price`).
 4. OrderService зберігає замовлення і повертає Покупцю `order_id`.
 5. Fork: надіслати `requestPayment` (без очікування відповіді) і запустити відлік 30 с; join — обидві дії виконано → очікування.
@@ -41,7 +41,7 @@ ProductRepository і OrderRepository доріжок не мають: це схо
 | `requestPayment` | OrderService → PaymentService | OrderService не чекає, іде на join | понад 30 с → таймаут → `cancelled` (S3) |
 | `paymentConfirmed`, `paymentRejected` | PaymentService → OrderService | зупинка відліку, запис статусу | — (це і є відповідь) |
 | таймаут 30 с | відлік → OrderService | запис `cancelled` | — (часова подія, не повідомлення між учасниками; у Лабі 3 — `onPaymentTimeout`) |
-| `orderStatusChanged` | OrderService → Покупець | Покупець відкриває замовлення | статус уже кінцевий, Покупець може відкрити пізніше |
+| `orderStatusChanged` | OrderService → Покупець | Покупець відкриває замовлення | Покупець чекає на сповіщення; втрата сповіщення поза обсягом |
 | `getOrder` / `status` | Покупець → OrderService і назад | Покупець бачить статус | — |
 
 Назви як у `lab3/sequence-diagrams.md`; відповідь на виклик — окрема пара send/accept у зворотний бік; `orderStatusChanged` — ПРОПОЗИЦІЯ з Лаби 3.
@@ -51,6 +51,7 @@ ProductRepository і OrderRepository доріжок не мають: це схо
 2. Повернення коштів і скасування оплаченого замовлення.
 3. Статус `shipped`.
 4. Показ статусу `pending` (REQ-10 описує лише `paid` і `cancelled`).
+5. Втрата сповіщення `orderStatusChanged`: доставку сповіщення вважаю гарантованою, повторне надсилання не моделюю.
 
 ## Критерії прийняття
 1. Одна форма — activity (Mermaid flowchart) у `lab4/activity-diagram.md`, код + рендер.
