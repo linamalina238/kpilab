@@ -48,3 +48,4 @@ WebUI → IApi; BackendAPI → IIdentity, ICatalog, IOrders, ISubscribe; Catalog
 4. Назви сервісів, операцій і повідомлень як у Лабах 3–4; сутності з ER Лаби 1; усе нове має ПРОПОЗИЦІЯ з причиною.
 5. Шари UI, API, сервіси, Data Access, БД; до БД лише через репозиторії.
 6. Асинхронність оплати збережена: `requestPayment` і callback окремі інтерфейси, відлік 30 с в OrderService.
+7. Інтерфейси внутрішніх компонентів лежать усередині package «Online Store»; на межі лише IPaymentRequest, IPaymentCallback і IIdentity, пов'язані із зовнішніми системами.
