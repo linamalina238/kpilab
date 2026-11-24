@@ -1,0 +1,93 @@
+@startuml
+title Online Store: Component Diagram (UC-01, UC-02, UC-03)
+
+skinparam componentStyle uml2
+skinparam defaultFontName DejaVu Sans
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam ArrowColor #444444
+skinparam nodesep 40
+skinparam ranksep 55
+top to bottom direction
+
+actor "Покупець" as Buyer
+
+package "Online Store" as Store {
+
+  ' UI
+  component "WebUI" as WebUI <<ПРОПОЗИЦІЯ>>
+
+  ' API
+  component "BackendAPI" as BackendAPI <<ПРОПОЗИЦІЯ>>
+
+  ' сервіси
+  component "CatalogService" as CatalogService
+  component "OrderService" as OrderService
+  component "NotificationService" as NotificationService <<ПРОПОЗИЦІЯ>>
+
+  ' Data Access
+  component "ProductRepository" as ProductRepository
+  component "OrderRepository" as OrderRepository
+
+  ' БД
+  component "Database" as Database <<ПРОПОЗИЦІЯ>>
+}
+
+component "PaymentService" as PaymentService <<зовнішня система>>
+component "Identity Provider" as IdP <<зовнішня система>>
+
+' ---------- інтерфейси ----------
+interface "IApi\ngetProducts, submitOrder,\ngetOrder, потік сповіщень" as IApi
+interface "IPaymentCallback\npaymentConfirmed,\npaymentRejected" as IPaymentCallback
+interface "ICatalog\ngetProducts(category_id)" as ICatalog
+interface "IOrders\nsubmitOrder(user_id, items)\ngetOrder(order_id, user_id)\npaymentConfirmed, paymentRejected" as IOrders
+interface "IPaymentRequest\nrequestPayment(order_id, amount)" as IPaymentRequest
+interface "INotify\norderStatusChanged" as INotify
+interface "ISubscribe\n<<ПРОПОЗИЦІЯ>>" as ISubscribe
+interface "IProductRepo\nfindProducts, getPrice" as IProductRepo
+interface "IOrderRepo\nsaveOrder, getOrderStatus,\nupdateStatus, findOrder" as IOrderRepo
+interface "IIdentity\nvalidateToken -> User.id" as IIdentity
+interface "SQL" as SQL
+
+' ---------- актор ----------
+Buyer --> WebUI
+
+' ---------- provided (lollipop) ----------
+IApi -- BackendAPI
+IPaymentCallback -right- BackendAPI
+ICatalog -- CatalogService
+IOrders -- OrderService
+IPaymentRequest -left- PaymentService
+INotify -right- NotificationService
+ISubscribe -- NotificationService
+IProductRepo -- ProductRepository
+IOrderRepo -- OrderRepository
+IIdentity -right- IdP
+SQL -- Database
+
+' ---------- required (залежності) ----------
+WebUI ..> IApi
+BackendAPI .right.> IIdentity
+BackendAPI ..> ICatalog
+BackendAPI ..> IOrders
+BackendAPI ..> ISubscribe
+CatalogService ..> IProductRepo
+OrderService ..> IProductRepo
+OrderService ..> IOrderRepo
+OrderService .left.> IPaymentRequest
+OrderService .right.> INotify
+ProductRepository ..> SQL
+OrderRepository ..> SQL
+PaymentService .up.> IPaymentCallback
+
+' ---------- розкладка (лише вигляд) ----------
+CatalogService -[hidden]right- OrderService
+ProductRepository -[hidden]right- OrderRepository
+
+legend right
+  lollipop = provided, пунктир = required
+  <<ПРОПОЗИЦІЯ>> = нове відносно Лаб 1-4
+  ISubscribe, getOrder(order_id, user_id): ПРОПОЗИЦІЯ
+endlegend
+
+@enduml

@@ -1,45 +1,50 @@
 # Специфікація: архітектура Online Store
 
 ## Намір
-Показати архітектуру системи, що реалізує UC-02 «Оформити й оплатити замовлення» разом з UC-01 і UC-03: компоненти, інтерфейси, залежності, межу системи й зовнішні інтеграції. Модель спирається на Лаби 1–4, нове позначено ПРОПОЗИЦІЯ.
+Показати архітектуру, що реалізує UC-02 «Оформити й оплатити замовлення» з UC-01 і UC-03: компоненти, інтерфейси, залежності, межу системи й зовнішні інтеграції. Спираюся на Лаби 1–4, нове позначаю ПРОПОЗИЦІЯ з причиною.
 
-## Форма
-Component Diagram у PlantUML (`lab5/component-diagram.puml`, код і рендер). Provided-інтерфейс це lollipop, required це socket, межа системи це package «Online Store».
-
-## Межа системи
+## Форма й межа
+Component Diagram у PlantUML (`lab5/component-diagram.puml`, код і рендер): provided це lollipop, required це socket, межа це package «Online Store».
 Всередині: WebUI, BackendAPI, CatalogService, OrderService, NotificationService, ProductRepository, OrderRepository, Database.
-Зовні: PaymentService (не актор, Лаба 2 ADR 0003), Identity Provider (ПРОПОЗИЦІЯ), Email-провайдер (ПРОПОЗИЦІЯ). Покупець не компонент.
+Зовні: PaymentService (не актор, Лаба 2 ADR 0003; callback це відповідь на `requestPayment`) і Identity Provider. Покупець актор поза межею зі стрілкою до WebUI.
 
 ## Компоненти
 | Компонент | Що робить | Звідки |
 |---|---|---|
-| WebUI | категорія, оформлення, статус; українська мова | UC-01–03, NFR-01, NFR-02 |
-| BackendAPI | єдиний вхід REST, перевірка токена, 401 і 403, callback оплати | NFR-05 |
-| CatalogService | Product за category_id | REQ-09 |
-| OrderService | Order і OrderItem, запит оплати, відлік 30 с, статус | REQ-01–08, REQ-10 |
-| NotificationService | orderStatusChanged Покупцю (ПРОПОЗИЦІЯ) | Лаба 3 |
-| ProductRepository, OrderRepository | доступ до Product, Order, OrderItem | Лаба 1 |
-| Database | таблиці з ER Лаби 1 | Лаба 1 |
+| WebUI (ПРОПОЗИЦІЯ: у Лабах 3–4 Покупець кличе сервіси напряму) | категорія, оформлення, статус, прийом сповіщення; українська | UC-01–03, NFR-01–02 |
+| BackendAPI (ПРОПОЗИЦІЯ: місце для NFR) | єдиний вхід, токен, 401/403/503, callback оплати | NFR-04–05 |
+| CatalogService | Product за `category_id` | REQ-09 |
+| OrderService | Order, OrderItem, запит оплати, відлік 30 с, статус | REQ-01–08, 10 |
+| NotificationService (ПРОПОЗИЦІЯ з Лаби 3) | `orderStatusChanged` до WebUI | Лаби 3–4 |
+| ProductRepository, OrderRepository | доступ до Product, Order, OrderItem | Лаба 3 |
+| Database (ПРОПОЗИЦІЯ) | таблиці ER Лаби 1 | Лаба 1 |
 
-## Інтерфейси
-- IApi (REST): WebUI, PaymentService (callback) → BackendAPI
-- ICatalog: getProducts(category_id)
-- IOrders: submitOrder, getOrder
-- IPaymentRequest: requestPayment(order_id, amount), зовнішній
-- INotify: orderStatusChanged(order_id, status)
-- IProductRepo, IOrderRepo, SQL
-- IIdentity: validateToken (ПРОПОЗИЦІЯ), IMessageGateway: send(email, text) (ПРОПОЗИЦІЯ)
+User і Category лежать у Database, але жодна операція Лаб 3–4 їх не читає.
+
+## Інтерфейси (provided → required)
+- IApi: BackendAPI → WebUI (`getProducts`, `submitOrder`, `getOrder`, потік сповіщень)
+- IPaymentCallback: BackendAPI → PaymentService (`paymentConfirmed`, `paymentRejected`, асинхронна відповідь, поза ліміту сесій)
+- ICatalog: CatalogService → BackendAPI (`getProducts(category_id)`)
+- IOrders: OrderService → BackendAPI (`submitOrder(user_id, items)`, `getOrder(order_id, user_id)`, `paymentConfirmed`, `paymentRejected`)
+- IPaymentRequest: PaymentService → OrderService (`requestPayment(order_id, amount)`)
+- INotify: NotificationService → OrderService (`orderStatusChanged`); ISubscribe: NotificationService → BackendAPI (ПРОПОЗИЦІЯ)
+- IProductRepo (`findProducts`, `getPrice`) → CatalogService, OrderService
+- IOrderRepo (`saveOrder`, `getOrderStatus`, `updateStatus`, `findOrder`) → OrderService
+- IIdentity: Identity Provider → BackendAPI (`validateToken` → `User.id`)
+- SQL: Database → обидва репозиторії
+
+`getOrder(order_id, user_id)` розширює Лабу 3 (ПРОПОЗИЦІЯ): власника Order перевіряє OrderService, BackendAPI віддає 403.
 
 ## Залежності
-WebUI → IApi; BackendAPI → IIdentity, ICatalog, IOrders; CatalogService → IProductRepo; OrderService → IProductRepo, IOrderRepo, IPaymentRequest, INotify; NotificationService → IMessageGateway; репозиторії → SQL.
+WebUI → IApi; BackendAPI → IIdentity, ICatalog, IOrders, ISubscribe; CatalogService → IProductRepo; OrderService → IProductRepo, IOrderRepo, IPaymentRequest, INotify; репозиторії → SQL; PaymentService → IPaymentCallback. Усе йде вниз, окрім callback.
 
 ## Поза обсягом
-Адміністрування й shipped; повернення коштів; пізня відповідь оплати; deployment; реєстрація користувачів.
+Адміністрування, `shipped`, повернення коштів, пізня відповідь оплати (Лаба 2); deployment; реєстрація; перезапуск OrderService під час відліку 30 с; час відповіді Identity Provider у NFR-03; email і SMS.
 
 ## Критерії прийняття
-1. Одна діаграма в PlantUML, код і рендер.
-2. Межа системи явна (package), зовнішні системи поза нею.
+1. Одна діаграма PlantUML, код і рендер.
+2. Межа системи явна, зовнішні системи поза нею.
 3. Кожен компонент має provided або required інтерфейс, кожен required має провайдера.
-4. Назви компонентів і операцій як у Лабах 3 і 4, сутності з ER Лаби 1.
-5. Шари: UI, API, сервіси, Data Access, БД; до БД лише через репозиторії.
-6. Усе нове має позначку ПРОПОЗИЦІЯ з обґрунтуванням.
+4. Назви сервісів, операцій і повідомлень як у Лабах 3–4; сутності з ER Лаби 1; усе нове має ПРОПОЗИЦІЯ з причиною.
+5. Шари UI, API, сервіси, Data Access, БД; до БД лише через репозиторії.
+6. Асинхронність оплати збережена: `requestPayment` і callback окремі інтерфейси, відлік 30 с в OrderService.
