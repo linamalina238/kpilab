@@ -4,7 +4,7 @@
 Показати архітектуру, що реалізує UC-02 «Оформити й оплатити замовлення» з UC-01 і UC-03: компоненти, інтерфейси, залежності, межу системи й зовнішні інтеграції. Спираюся на Лаби 1–4, нове позначаю ПРОПОЗИЦІЯ з причиною.
 
 ## Форма й межа
-Component Diagram у PlantUML (`lab5/component-diagram.puml`, код і рендер): provided це lollipop, required це socket, межа це package «Online Store».
+Component Diagram у PlantUML (`lab5/component-diagram.puml`, код і рендер): provided це lollipop, required це пунктирна залежність до інтерфейсу, межа це package «Online Store».
 Всередині: WebUI, BackendAPI, CatalogService, OrderService, NotificationService, ProductRepository, OrderRepository, Database.
 Зовні: PaymentService (не актор, Лаба 2 ADR 0003; callback це відповідь на `requestPayment`) і Identity Provider. Покупець актор поза межею зі стрілкою до WebUI.
 
@@ -49,3 +49,4 @@ WebUI → IApi; BackendAPI → IIdentity, ICatalog, IOrders, ISubscribe; Catalog
 5. Шари UI, API, сервіси, Data Access, БД; до БД лише через репозиторії.
 6. Асинхронність оплати збережена: `requestPayment` і callback окремі інтерфейси, відлік 30 с в OrderService.
 7. Інтерфейси внутрішніх компонентів лежать усередині package «Online Store»; на межі лише IPaymentRequest, IPaymentCallback і IIdentity, пов'язані із зовнішніми системами.
+8. Required-інтерфейси показано однаково: пунктирна залежність споживача до інтерфейсу, як у позначках на діаграмі.
