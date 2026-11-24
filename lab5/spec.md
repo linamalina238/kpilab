@@ -50,3 +50,4 @@ WebUI → IApi; BackendAPI → IIdentity, ICatalog, IOrders, ISubscribe; Catalog
 6. Асинхронність оплати збережена: `requestPayment` і callback окремі інтерфейси, відлік 30 с в OrderService.
 7. Інтерфейси внутрішніх компонентів лежать усередині package «Online Store»; на межі лише IPaymentRequest, IPaymentCallback і IIdentity, пов'язані із зовнішніми системами.
 8. Required-інтерфейси показано однаково: пунктирна залежність споживача до інтерфейсу, як у позначках на діаграмі.
+9. Шари розташовано рядами зверху вниз: UI, API, сервіси, Data Access, БД; підписи інтерфейсів не накладаються.
