@@ -6,7 +6,7 @@
 ## Форма й межа
 Component Diagram у PlantUML (`lab5/component-diagram.puml`, код і рендер): provided це lollipop, required це пунктирна залежність до інтерфейсу, межа це package «Online Store».
 Всередині: WebUI, BackendAPI, CatalogService, OrderService, NotificationService, ProductRepository, OrderRepository, Database.
-Зовні: PaymentService (не актор, Лаба 2 ADR 0003; callback це відповідь на `requestPayment`) і Identity Provider. Покупець актор поза межею зі стрілкою до WebUI.
+Зовні: PaymentService (не актор, Лаба 2 ADR 0003; callback це відповідь на `requestPayment`) і Identity Provider (ПРОПОЗИЦІЯ: перевіряє токен і дає `User.id` для 401 і 403). Покупець актор поза межею зі стрілкою до WebUI.
 
 ## Компоненти
 | Компонент | Що робить | Звідки |
@@ -17,7 +17,7 @@ Component Diagram у PlantUML (`lab5/component-diagram.puml`, код і ренд
 | OrderService | Order, OrderItem, запит оплати, відлік 30 с, статус | REQ-01–08, 10 |
 | NotificationService (ПРОПОЗИЦІЯ з Лаби 3) | `orderStatusChanged` до WebUI | Лаби 3–4 |
 | ProductRepository, OrderRepository | доступ до Product, Order, OrderItem | Лаба 3 |
-| Database (ПРОПОЗИЦІЯ) | таблиці ER Лаби 1 | Лаба 1 |
+| Database (ПРОПОЗИЦІЯ: у Лабах 1–4 немає сховища, а ER Лаби 1 потребує бази) | таблиці ER Лаби 1 | Лаба 1 |
 
 User і Category лежать у Database, але жодна операція Лаб 3–4 їх не читає.
 
@@ -30,7 +30,7 @@ User і Category лежать у Database, але жодна операція Л
 - INotify: NotificationService → OrderService (`orderStatusChanged`); ISubscribe: NotificationService → BackendAPI (ПРОПОЗИЦІЯ)
 - IProductRepo: ProductRepository → CatalogService, OrderService (`findProducts`, `getPrice`)
 - IOrderRepo: OrderRepository → OrderService (`saveOrder`, `getOrderStatus`, `updateStatus`, `findOrder`)
-- IIdentity: Identity Provider → BackendAPI (`validateToken` → `User.id`)
+- IIdentity: Identity Provider → BackendAPI (`validateToken` → `User.id`, ПРОПОЗИЦІЯ)
 - SQL: Database → обидва репозиторії
 
 `getOrder(order_id, user_id)` розширює Лабу 3 (ПРОПОЗИЦІЯ): власника Order перевіряє OrderService, BackendAPI віддає 403.
