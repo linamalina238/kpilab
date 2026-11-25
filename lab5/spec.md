@@ -36,7 +36,8 @@ User і Category лежать у Database, але жодна операція Л
 `getOrder(order_id, user_id)` розширює Лабу 3 (ПРОПОЗИЦІЯ): власника Order перевіряє OrderService, BackendAPI віддає 403.
 
 ## Залежності
-WebUI → IApi; BackendAPI → IIdentity, ICatalog, IOrders, ISubscribe; CatalogService → IProductRepo; OrderService → IProductRepo, IOrderRepo, IPaymentRequest, INotify; репозиторії → SQL; PaymentService → IPaymentCallback. Усе йде вниз, окрім callback.
+WebUI → IApi; BackendAPI → IIdentity, ICatalog, IOrders, ISubscribe; CatalogService → IProductRepo; OrderService → IProductRepo, IOrderRepo, IPaymentRequest, INotify; репозиторії → SQL; PaymentService → IPaymentCallback.
+Залежності йдуть вниз по шарах. Винятки: PaymentService → IPaymentCallback (знизу вгору, з боку зовнішньої системи), OrderService → INotify (в межах шару сервісів) і виклики зовнішніх систем IIdentity та IPaymentRequest.
 
 ## Поза обсягом
 Адміністрування, `shipped`, повернення коштів, пізня відповідь оплати (Лаба 2); deployment; реєстрація; перезапуск OrderService під час відліку 30 с; час відповіді Identity Provider у NFR-03; email і SMS.
