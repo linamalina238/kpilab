@@ -28,8 +28,8 @@ User і Category лежать у Database, але жодна операція Л
 - IOrders: OrderService → BackendAPI (`submitOrder(user_id, items)`, `getOrder(order_id, user_id)`, `paymentConfirmed`, `paymentRejected`)
 - IPaymentRequest: PaymentService → OrderService (`requestPayment(order_id, amount)`)
 - INotify: NotificationService → OrderService (`orderStatusChanged`); ISubscribe: NotificationService → BackendAPI (ПРОПОЗИЦІЯ)
-- IProductRepo (`findProducts`, `getPrice`) → CatalogService, OrderService
-- IOrderRepo (`saveOrder`, `getOrderStatus`, `updateStatus`, `findOrder`) → OrderService
+- IProductRepo: ProductRepository → CatalogService, OrderService (`findProducts`, `getPrice`)
+- IOrderRepo: OrderRepository → OrderService (`saveOrder`, `getOrderStatus`, `updateStatus`, `findOrder`)
 - IIdentity: Identity Provider → BackendAPI (`validateToken` → `User.id`)
 - SQL: Database → обидва репозиторії
 
