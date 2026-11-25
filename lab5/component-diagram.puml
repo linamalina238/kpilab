@@ -1,0 +1,93 @@
+@startuml
+title Online Store: Component Diagram (UC-01, UC-02, UC-03)
+
+skinparam componentStyle uml2
+skinparam defaultFontName DejaVu Sans
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam ArrowColor #444444
+skinparam nodesep 300
+skinparam ranksep 110
+top to bottom direction
+
+actor "Покупець" as Buyer
+
+' Підписи інтерфейсів зсунуто вбік від лінії lollipop (\l і \r плюс нерозривні пробіли),
+' щоб лінія зв'язку не різала текст.
+
+package "Online Store" as Store {
+
+  component "WebUI" as WebUI <<ПРОПОЗИЦІЯ>>
+  interface "                                              IApi\l                                              getProducts, submitOrder,\l                                              getOrder, потік сповіщень\l" as IApi
+
+  component "BackendAPI" as BackendAPI <<ПРОПОЗИЦІЯ>>
+  interface "ICatalog                           \rgetProducts                           \r(category_id)                           \r" as ICatalog
+  interface "                                                  IOrders\l                                                  submitOrder(user_id, items)\l                                                  getOrder(order_id, user_id)\l                                                  paymentConfirmed,\l                                                  paymentRejected\l" as IOrders
+  interface "                            ISubscribe\l                            <<ПРОПОЗИЦІЯ>>\l" as ISubscribe
+
+  component "CatalogService" as CatalogService
+  component "OrderService" as OrderService
+  component "NotificationService" as NotificationService <<ПРОПОЗИЦІЯ>>
+  interface "                                   INotify\l                                   orderStatusChanged\l" as INotify
+
+  interface "                                         IProductRepo\l                                         findProducts, getPrice\l" as IProductRepo
+  interface "IOrderRepo                                                \rsaveOrder, getOrderStatus,                                                \rupdateStatus, findOrder                                                \r" as IOrderRepo
+  component "ProductRepository" as ProductRepository
+  component "OrderRepository" as OrderRepository
+
+  interface "          SQL\l" as SQL
+  component "Database" as Database <<ПРОПОЗИЦІЯ>>
+}
+
+component "PaymentService" as PaymentService <<зовнішня система>>
+component "Identity Provider" as IdP <<зовнішня система>>
+interface "IPaymentRequest                                   \rrequestPayment                                   \r(order_id, amount)                                   \r" as IPaymentRequest
+interface "                                 IPaymentCallback\l                                 paymentConfirmed,\l                                 paymentRejected\l" as IPaymentCallback
+interface "                                             IIdentity\l                                             validateToken -> User.id\l" as IIdentity
+
+Buyer -down-> WebUI
+
+WebUI -down.> IApi
+IApi -down- BackendAPI
+
+BackendAPI -down.> ICatalog
+ICatalog -down- CatalogService
+BackendAPI -down.> IOrders
+IOrders -down- OrderService
+BackendAPI -down.> ISubscribe
+ISubscribe -down- NotificationService
+
+OrderService .right.> INotify
+INotify -right- NotificationService
+
+CatalogService -down.> IProductRepo
+OrderService -down.> IProductRepo
+IProductRepo -down- ProductRepository
+OrderService -down.> IOrderRepo
+IOrderRepo -down- OrderRepository
+
+ProductRepository -down.> SQL
+OrderRepository -down.> SQL
+SQL -down- Database
+
+OrderService .left.> IPaymentRequest
+IPaymentRequest -left- PaymentService
+PaymentService .up.> IPaymentCallback
+IPaymentCallback -right- BackendAPI
+BackendAPI .right.> IIdentity
+IIdentity -right- IdP
+
+OrderService -[hidden]right- NotificationService
+NotificationService -[hidden]right- CatalogService
+IOrders -[hidden]right- ISubscribe
+ISubscribe -[hidden]right- ICatalog
+OrderRepository -[hidden]right- ProductRepository
+
+legend right
+  кружок = provided-інтерфейс (lollipop)
+  пунктир до інтерфейсу = required
+  <<ПРОПОЗИЦІЯ>> = нове відносно Лаб 1-4
+  ISubscribe, getOrder(order_id, user_id): ПРОПОЗИЦІЯ
+endlegend
+
+@enduml
