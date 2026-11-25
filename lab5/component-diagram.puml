@@ -6,86 +6,86 @@ skinparam defaultFontName DejaVu Sans
 skinparam packageStyle rectangle
 skinparam shadowing false
 skinparam ArrowColor #444444
-skinparam nodesep 40
-skinparam ranksep 55
+skinparam nodesep 300
+skinparam ranksep 110
 top to bottom direction
 
 actor "Покупець" as Buyer
 
+' Підписи інтерфейсів зсунуто вбік від лінії lollipop (\l і \r плюс нерозривні пробіли),
+' щоб лінія зв'язку не різала текст.
+
 package "Online Store" as Store {
 
-  ' UI
   component "WebUI" as WebUI <<ПРОПОЗИЦІЯ>>
+  interface "                                              IApi\l                                              getProducts, submitOrder,\l                                              getOrder, потік сповіщень\l" as IApi
 
-  ' API
   component "BackendAPI" as BackendAPI <<ПРОПОЗИЦІЯ>>
+  interface "ICatalog                           \rgetProducts                           \r(category_id)                           \r" as ICatalog
+  interface "                                                  IOrders\l                                                  submitOrder(user_id, items)\l                                                  getOrder(order_id, user_id)\l                                                  paymentConfirmed,\l                                                  paymentRejected\l" as IOrders
+  interface "                            ISubscribe\l                            <<ПРОПОЗИЦІЯ>>\l" as ISubscribe
 
-  ' сервіси
   component "CatalogService" as CatalogService
   component "OrderService" as OrderService
   component "NotificationService" as NotificationService <<ПРОПОЗИЦІЯ>>
+  interface "                                   INotify\l                                   orderStatusChanged\l" as INotify
 
-  ' Data Access
+  interface "                                         IProductRepo\l                                         findProducts, getPrice\l" as IProductRepo
+  interface "IOrderRepo                                                \rsaveOrder, getOrderStatus,                                                \rupdateStatus, findOrder                                                \r" as IOrderRepo
   component "ProductRepository" as ProductRepository
   component "OrderRepository" as OrderRepository
 
-  ' БД
+  interface "          SQL\l" as SQL
   component "Database" as Database <<ПРОПОЗИЦІЯ>>
 }
 
 component "PaymentService" as PaymentService <<зовнішня система>>
 component "Identity Provider" as IdP <<зовнішня система>>
+interface "IPaymentRequest                                   \rrequestPayment                                   \r(order_id, amount)                                   \r" as IPaymentRequest
+interface "                                 IPaymentCallback\l                                 paymentConfirmed,\l                                 paymentRejected\l" as IPaymentCallback
+interface "                                             IIdentity\l                                             validateToken -> User.id\l" as IIdentity
 
-' ---------- інтерфейси ----------
-interface "IApi\ngetProducts, submitOrder,\ngetOrder, потік сповіщень" as IApi
-interface "IPaymentCallback\npaymentConfirmed,\npaymentRejected" as IPaymentCallback
-interface "ICatalog\ngetProducts(category_id)" as ICatalog
-interface "IOrders\nsubmitOrder(user_id, items)\ngetOrder(order_id, user_id)\npaymentConfirmed, paymentRejected" as IOrders
-interface "IPaymentRequest\nrequestPayment(order_id, amount)" as IPaymentRequest
-interface "INotify\norderStatusChanged" as INotify
-interface "ISubscribe\n<<ПРОПОЗИЦІЯ>>" as ISubscribe
-interface "IProductRepo\nfindProducts, getPrice" as IProductRepo
-interface "IOrderRepo\nsaveOrder, getOrderStatus,\nupdateStatus, findOrder" as IOrderRepo
-interface "IIdentity\nvalidateToken -> User.id" as IIdentity
-interface "SQL" as SQL
+Buyer -down-> WebUI
 
-' ---------- актор ----------
-Buyer --> WebUI
+WebUI -down.> IApi
+IApi -down- BackendAPI
 
-' ---------- provided (lollipop) ----------
-IApi -- BackendAPI
-IPaymentCallback -right- BackendAPI
-ICatalog -- CatalogService
-IOrders -- OrderService
-IPaymentRequest -left- PaymentService
-INotify -right- NotificationService
-ISubscribe -- NotificationService
-IProductRepo -- ProductRepository
-IOrderRepo -- OrderRepository
-IIdentity -right- IdP
-SQL -- Database
+BackendAPI -down.> ICatalog
+ICatalog -down- CatalogService
+BackendAPI -down.> IOrders
+IOrders -down- OrderService
+BackendAPI -down.> ISubscribe
+ISubscribe -down- NotificationService
 
-' ---------- required (залежності) ----------
-WebUI ..> IApi
-BackendAPI .right.> IIdentity
-BackendAPI ..> ICatalog
-BackendAPI ..> IOrders
-BackendAPI ..> ISubscribe
-CatalogService ..> IProductRepo
-OrderService ..> IProductRepo
-OrderService ..> IOrderRepo
-OrderService .left.> IPaymentRequest
 OrderService .right.> INotify
-ProductRepository ..> SQL
-OrderRepository ..> SQL
-PaymentService .up.> IPaymentCallback
+INotify -right- NotificationService
 
-' ---------- розкладка (лише вигляд) ----------
-CatalogService -[hidden]right- OrderService
-ProductRepository -[hidden]right- OrderRepository
+CatalogService -down.> IProductRepo
+OrderService -down.> IProductRepo
+IProductRepo -down- ProductRepository
+OrderService -down.> IOrderRepo
+IOrderRepo -down- OrderRepository
+
+ProductRepository -down.> SQL
+OrderRepository -down.> SQL
+SQL -down- Database
+
+OrderService .left.> IPaymentRequest
+IPaymentRequest -left- PaymentService
+PaymentService .up.> IPaymentCallback
+IPaymentCallback -right- BackendAPI
+BackendAPI .right.> IIdentity
+IIdentity -right- IdP
+
+OrderService -[hidden]right- NotificationService
+NotificationService -[hidden]right- CatalogService
+IOrders -[hidden]right- ISubscribe
+ISubscribe -[hidden]right- ICatalog
+OrderRepository -[hidden]right- ProductRepository
 
 legend right
-  lollipop = provided, пунктир = required
+  кружок = provided-інтерфейс (lollipop)
+  пунктир до інтерфейсу = required
   <<ПРОПОЗИЦІЯ>> = нове відносно Лаб 1-4
   ISubscribe, getOrder(order_id, user_id): ПРОПОЗИЦІЯ
 endlegend
